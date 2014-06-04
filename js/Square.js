@@ -4,6 +4,8 @@ function Square(x,y,r){
 	this.y = y || 0; 
 	this.r = r || 0; 
 	this.color = '#CFC0C0'; 
+	this.row = 0; 
+	this.col = 0; 
 }
 Square.prototype.containsAgent = function(){
 	return agent !== null; 
@@ -14,6 +16,8 @@ Square.prototype.draw = function(ctx){
 	ctx.arc(this.x, this.y, this.r, 0, 2*Math.PI, false);
 	ctx.fillStyle = this.color; 
 	ctx.fill(); 
+	ctx.fillStyle = "black"; 
+	ctx.fillText(String(this.row)+","+String(this.col),this.x-7,this.y+5);
 };
 
 Square.prototype.setAgent = function(agent){
