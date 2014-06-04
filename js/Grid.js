@@ -65,7 +65,7 @@ Grid.prototype.wrap = function(r,c){
 		newC = c-this.side; 
 	else if (c < 0)
 		newC = c + this.side; 
-	
+
 	return this.positions[newR][newC];
 };
 

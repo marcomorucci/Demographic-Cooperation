@@ -76,7 +76,7 @@ Agent.prototype.die = function(grid, threshold){
 
 Agent.prototype.chooseRandomSquare = function(grid){
 	//Get squares within vision radius
-	var emptySquares = grid.getSquaresInRadius(this.vision);
+	var emptySquares = grid.getSquaresInRadius(this.vision,this.position.row,this.position.col);
 	
 	//Maybe factor into grid function as it won't be used elsewhere
 	//Remove squares that are already occupied by an agent
