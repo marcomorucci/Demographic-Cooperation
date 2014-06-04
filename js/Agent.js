@@ -1,6 +1,6 @@
 function Agent(strategy, position, name, vision, budget){
 	this.position = position || null; 
-	this.strategy = strategy || true; 
+	this.strategy = strategy; 
 	this.budget = budget || 0; 
 	this.name = name || ""; 
 	this.vision = vision || 1; 
