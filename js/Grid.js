@@ -41,6 +41,7 @@ Grid.prototype.createSquares = function(){
 Grid.prototype.getNeighbours = function(r,c){
 
 	var neighbours = [];
+
 	neighbours.push(this.wrap(r-1,c));
 	neighbours.push(this.wrap(r+1,c));
 	neighbours.push(this.wrap(r,c-1));
@@ -98,6 +99,7 @@ Grid.prototype.getSquaresInRadius = function(radius,r,c){
 };
 
 Grid.prototype.draw = function(ctx){ 
+	ctx.clearRect(0,0,this.w, this.h );
 	for(var r = 0; r < this.positions.length; r++){
 		for(var c = 0; c < this.positions[r].length; c++){
 			this.positions[r][c].draw(ctx); 
