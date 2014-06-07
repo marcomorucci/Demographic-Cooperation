@@ -1,39 +1,117 @@
+//Globals are bad. 
+payoffType = "fixed"; 
+
 function init(){
+
 }
 
 function runSimulation(){
-
-	
 	var canvas = document.getElementById("canvas");
 	var ctx = canvas.getContext("2d");
-
 	
+	//User input processing. 
 	var gridSide = parseInt(document.getElementById("gridSide").value,10); 
 	if(isNaN(gridSide)){
-		document.getElementById("gridSide").innerHTML += " Please input an integer value";
+		document.getElementById("gridSideLabel").innerHTML = " Please input an integer value";
 		return; 
-	}
+	} else 
+		document.getElementById("gridSideLabel").innerHTML = " Grid side (side x side grid).";
+
 	var nAgents = parseInt(document.getElementById("nAgents").value,10);
-	var defectors = parseInt(document.getElementById("defectors").value,10);
-	var budget = parseInt(document.getElementById("budget").value,10);
-	var vision = parseInt(document.getElementById("vision").value,10);
-	var repThreshold = parseInt(document.getElementById("repThreshold").value,10);
-	var dieThreshold = parseInt(document.getElementById("dieThreshold").value,10); 
-	var childLoss = parseInt(document.getElementById("childLoss").value,10); 
+	if(isNaN(nAgents)){
+		document.getElementById("nAgentsLabel").innerHTML = " Please input an integer value";
+		return; 
+	} else 
+		document.getElementById("nAgentsLabel").innerHTML = " Initial amount of agents.";
+
+	var defectors = parseFloat(document.getElementById("defectors").value,10);
+	if(isNaN(defectors) || defectors >= 1 || defectors <= 0){
+		document.getElementById("defectorsLabel").innerHTML = " Please enter a number between 0 and 1.";
+		return; 
+	} else 
+		document.getElementById("defectorsLabel").innerHTML = " Proportion of defectors";
 	
-	console.log(gridSide);
-	//var g = new Grid(30, canvas);
-	//var a = generateAgents(nAgents, defectors,vision,budget);
-	//populateGrid(g,a); 
-	//repeats = setInterval(function(){simulateRound(g,repThreshold,dieThreshold,childLoss); 
-	//g.draw(ctx);},30);
+	var budget = parseInt(document.getElementById("budget").value,10);
+	if(isNaN(budget)){
+		document.getElementById("budgetLabel").innerHTML = " Please input an integer value";
+		return; 
+	} else 
+		document.getElementById("budgetLabel").innerHTML = " Initial budget of agents.";
+	
+	var vision = parseInt(document.getElementById("vision").value,10);
+	if(isNaN(vision)){
+		document.getElementById("visionLabel").innerHTML = " Please input an integer value";
+		return; 
+	} else 
+		document.getElementById("visionLabel").innerHTML = " Vision range of an agent.";
+	
+	var repThreshold = parseInt(document.getElementById("repThreshold").value,10);
+	if(isNaN(repThreshold)){
+		document.getElementById("repLabel").innerHTML = " Please input an integer value";
+		return; 
+	} else 
+		document.getElementById("repLabel").innerHTML = " Reproduction threshold.";
+	
+	var dieThreshold = parseInt(document.getElementById("dieThreshold").value,10);
+	if(isNaN(dieThreshold)){
+		document.getElementById("dieLabel").innerHTML = " Please input an integer value";
+		return; 
+	} else 
+		document.getElementById("dieLabel").innerHTML = " Death threshold.";
+	 
+	var childLoss = parseInt(document.getElementById("childLoss").value,10);
+	if(isNaN(childLoss)){
+		document.getElementById("childLabel").innerHTML = " Please input an integer value";
+		return; 
+	} else 
+		document.getElementById("childLabel").innerHTML = " Initial endowment of child.";
+	 
+
+	//Get payoffs from user input
+	var payoffFcn;
+	if(payoffType == "fixed"){
+		var t = parseInt(document.getElementById("fT").value,10);
+		var r = parseInt(document.getElementById("fR").value,10);
+		var p = parseInt(document.getElementById("fP").value,10);
+		var s = parseInt(document.getElementById("fS").value,10);
+		payoffFcn = fixedPayoffs(t,r,p,s); 
+	} else if(payoffType == "random"){
+		var minT = parseInt(document.getElementById("rMinT").value,10);
+		var maxT = parseInt(document.getElementById("rMaxT").value,10); 
+		var minR = parseInt(document.getElementById("rMinR").value,10); 
+		var maxR = parseInt(document.getElementById("rMaxR").value,10);
+		var minP = parseInt(document.getElementById("rMinP").value,10); 
+		var maxP = parseInt(document.getElementById("rMaxP").value,10);
+		var minS = parseInt(document.getElementById("rMinS").value,10); 
+		var maxS = parseInt(document.getElementById("rMaxS").value,10); 
+		payoffFcn = randomPayoffs(minT,maxT,minR,maxR,minP,maxP,minS,maxS); 
+	}else if(payoffType == "normal"){
+		var muT = parseInt(document.getElementById("nMuT").value,10);
+		var sdT = parseInt(document.getElementById("nSdT").value,10); 
+		var muR = parseInt(document.getElementById("nMuR").value,10); 
+		var sdR = parseInt(document.getElementById("nSdR").value,10);
+		var muP = parseInt(document.getElementById("nMuP").value,10); 
+		var sdP = parseInt(document.getElementById("nSdP").value,10);
+		var muS = parseInt(document.getElementById("nMuS").value,10); 
+		var sdS = parseInt(document.getElementById("nSdS").value,10); 
+		payoffFcn = normalPayoffs(muT,sdT,muR,sdR,muP,sdP,muS,sdS); 
+	}
+
+	console.log(payoffType);
+	console.log(payoffFcn);
+	//Create grid and populate it with agents
+	var g = new Grid(gridSide, canvas);
+	var a = generateAgents(nAgents, defectors,vision,budget);
+	populateGrid(g,a); 
+	repeats = setInterval(function(){simulateRound(g,repThreshold,dieThreshold,childLoss,payoffFcn); 
+	g.draw(ctx);},30);
 }
 
 function stopSimulation(){
 	clearInterval(repeats); 
 }
 
-function simulateRound(grid, repThreshold, dieThreshold, childLoss){
+function simulateRound(grid, repThreshold, dieThreshold, childLoss,payoffFcn){
 	var roundMemo = {};
 	var roundCoop = 0; 
 	var roundDef = 0; 
@@ -55,7 +133,7 @@ function simulateRound(grid, repThreshold, dieThreshold, childLoss){
 					 (!(agent.name + neighbours[i].agent.name in roundMemo) || 
 					 	!(neighbours[i].agent.name + agent.name in roundMemo))){
 
-					var p = fixedPayoffs(6,5,-5,-6);
+					var p = payoffFcn();
 					agent.updateBudget(neighbours[i].agent.getAction(),p);
 					neighbours[i].agent.updateBudget(agent.getAction(),p);
 					//Need to change the way this is stored
@@ -120,5 +198,57 @@ function populateGrid(grid,agents){
 }
 
 function fixedPayoffs(t,r,p,s){
-	return {T:t,R:r,P:p,S:s};
+	return function(){
+		return {T:t,R:r,P:p,S:s};
+	};
+}
+
+function randomPayoffs(minT,maxT,minR,maxR,minP,maxP,minS,maxS){
+
+	return function() {
+		var t = Math.floor(Math.random()*(maxT-minT+1)+minT);
+		var r = Math.floor(Math.random()*(maxR-minR+1)+minR); 
+		var p = Math.floor(Math.random()*(maxP-minP+1)+minP);
+		var s = Math.floor(Math.random()*(maxS-minS+1)+minS);
+		return {T:t,R:r,P:p,S:s};
+	};
+}
+
+function normalPayoffs(avT,sdT,avR,sdR,avP,sdP,avS,sdS){
+
+	return function(){
+		var t = Math.round(rnd()*sdT+avT);
+		var r = Math.round(rnd()*sdR+avR);
+		var p = Math.round(rnd()*sdP+avP);
+		var s = Math.round(rnd()*sdS+avS); 
+		return {T:t,R:r,P:p,S:s};
+	};
+}
+
+function rnd(){
+	return (Math.random()*2-1)+(Math.random()*2-1)+(Math.random()*2-1);
+}
+
+function changePayoffInput(){
+	var fixed = document.getElementById("fixedInput"); 
+	var random = document.getElementById("randomInput");
+	var normal = document.getElementById("normalInput");
+
+	var opt = document.getElementById("payoffType");
+	if(opt.value=="fixed"){
+		random.style="display:none";
+		normal.style="display:none"; 
+		fixed.style="display:block";
+		payoffType = "fixed"; 
+	} else if (opt.value == "random"){
+		normal.style="display:none"; 
+		fixed.style="display:none";
+		random.style="display:block";
+		payoffType = "random"; 
+	} else if (opt.value == "normal"){
+		fixed.style="display:none";
+		random.style="display:none";
+		normal.style="display:block"; 	
+		payoffType = "normal";
+	}
 }

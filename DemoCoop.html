@@ -8,14 +8,92 @@
 		</canvas>	
 	</div>
 	<div style="float:left">
-		<p><input id="gridSide" type ="number" min=0> Grid side (side x side grid).</p> 
-		<p><input id="nAgents" type="number" min=0> Initial amount of agents.</p> 
-		<p><input id="defectors" type="number" min=0 step=0.01> Proportion of defectors</p>
-		<p><input id="budget" type="number"min=0> Initial budget of agents.</p>
-		<p><input id="vision" type="number"min=0> Vision range of an agent.</p>
-		<p><input id="repThreshold" type="number"min=0> Reproduction threshold.</p>
-		<p><input id="dieThreshold" type="number"min=0> Agent death threshold.</p>
-		<p><input id="childLoss" type="number"min=0> Initial endowment of child.</p>
+		<p>
+			<input id="gridSide" type ="number" min=0> 
+			<label id="gridSideLabel" for="gridSide">Grid side (side x side grid).</label>
+		</p> 
+		<p>
+			<input id="nAgents" type="number" min=0>
+			<label id="nAgentsLabel" for="nAgents"> Initial amount of agents.</label>
+		</p> 
+		<p>
+			<input id="defectors" type="number" min=0 step=0.01> 
+			<label id="defectorsLabel" for="defectors">Proportion of defectors</label>
+		</p>
+		<p>
+			<input id="budget" type="number"min=0> 
+			<label id="budgetLabel" for="budget">Initial budget of agents.</label>
+		</p>
+		<p>
+			<input id="vision" type="number"min=0> 
+			<label id="visionLabel" for="vision">Vision range of an agent.</label>
+		</p>
+		<p>
+			<input id="repThreshold" type="number"min=0> 
+			<label id="repLabel" for="repThreshold">Reproduction threshold.</label>
+		</p>
+		<p>
+			<input id="dieThreshold" type="number"min=0> 
+			<label id="dieLabel" for = "dieThreshold">Agent death threshold.</label>
+		</p>
+		<p>
+			<input id="childLoss" type="number"min=0> 
+			<label id="childLabel" for="childLoss">Initial endowment of child.</label>
+		</p>
+		<p>
+			<select id="payoffType" onclick="changePayoffInput();">
+				<option value="fixed">Fixed</option>
+				<option value="random">Random Uniform</option>
+				<option value="normal">Random Normal</option>
+			</select>
+			<label for="payoffType"> Type of payoff function.</label>
+		</p>
+		<div id="fixedInput" style="display:none">
+			<p>
+				<input id="fT" type="number"> <label for="fT"> T</label>
+				<input id="fR" type="number"> <label for="fR"> R</label>
+			</p>
+			<p>
+				<input id="fP" type="number"> <label for="fP"> P</label>
+				<input id="fS" type="number"> <label for="fS"> S</label>
+			</p>
+		</div>
+		<div id="randomInput" style="display:none">
+			<p>
+				<input id="rMinT" type="number"> <label for="rMinT"> Min T</label>
+				<input id="rMaxT" type="number"> <label for="rMaxT"> Max T</label>
+			</p>
+			<p>
+				<input id="rMinR" type="number"> <label for="rMinR"> Min R</label>
+				<input id="rMaxR" type="number"> <label for="rMaxR"> Max R</label>
+			</p>
+			<p>
+				<input id="rMinP" type="number"> <label for="rMinP"> Min P</label>
+				<input id="rMaxP" type="number"> <label for="rMaxP"> Max P</label>
+			</p>
+			<p>
+				<input id="rMinS" type="number"> <label for="rMinS"> Min S</label>
+				<input id="rMaxS" type="number"> <label for="rMaxS"> Max S</label>
+			</p>
+		</div>
+		<div id="normalInput" style="display:block">
+			<p>
+				<input id="nMuT" type="number"> <label for="nMuT"> Mean T</label>
+				<input id="nSdT" type="number"> <label for="nSdT"> Std  T</label>
+			</p>
+			<p>
+				<input id="nMuR" type="number"> <label for="nMuR"> Mean R</label>
+				<input id="nSdR" type="number"> <label for="nSdR"> Std R</label>
+			</p>
+			<p>
+				<input id="nMuP" type="number"> <label for="nMuP"> Mean P</label>
+				<input id="nSdP" type="number"> <label for="nSdP"> Std P</label>
+			</p>
+			<p>
+				<input id="nMuS" type="number"> <label for="nMuS"> Mean S</label>
+				<input id="nSdS" type="number"> <label for="nSdS"> Std S</label>
+			</p>
+		</div>
 	</div>
 	<div style="position:absolute; bottom:0">
 		<button onclick="runSimulation(100,10,0,6)" id="Run">

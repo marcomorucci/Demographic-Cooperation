@@ -42,10 +42,17 @@ Agent.prototype.reproduce = function(grid,threshold,loss){
 	//Do nothing if reproduction threshold is not met
 	if(this.budget < threshold)
 		return; 
-	//Instantiate a child with same strategy and random position within vision
-	var child = new Agent(this.strategy,this.chooseRandomSquare(grid),
-		String(grid.agents.length),this.vision, loss); 
 
+	//Avoid spawning child on same square as this agent
+	var childPos = null; 
+	while (childPos === null || childPos == this.position){
+		childPos = this.chooseRandomSquare(grid); 
+	}
+
+	//Instantiate a child with same strategy and random position within vision
+	var child = new Agent(this.strategy,childPos,
+		String(grid.agents.length),this.vision, loss); 
+	
 	//Uodate square child is now on
 	child.position.setAgent(child);
 	//Update agents count 
@@ -81,7 +88,7 @@ Agent.prototype.chooseRandomSquare = function(grid){
 	//Maybe factor into grid function as it won't be used elsewhere
 	//Remove squares that are already occupied by an agent
 	for (var i = 0; i < emptySquares.length; i++)
-		if(!emptySquares[i].containsAgent())
+		if(emptySquares[i].containsAgent())
 			emptySquares.splice(i,1); 
 
 	//Choose randomly among empty squares

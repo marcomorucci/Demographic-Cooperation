@@ -51,3 +51,14 @@ function testAgentMovement(grid){
 		n[i].color = "#98E453";
 	a.move(grid);
 }
+
+function testReproduce(grid){
+	var n = grid.getSquaresInRadius(2,3,3); 
+	for(var i = 0; i < n.length; i++)
+		n[i].color = "#98E453";
+	var a = new Agent(true,grid.positions[3][3],"a",2,100);
+	a.position.setAgent(a); 
+	grid.agents.push(a); 
+	a.reproduce(grid,10,0);
+	a.reproduce(grid,10,0); 
+}
