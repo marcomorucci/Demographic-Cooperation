@@ -1,5 +1,6 @@
 //Globals are bad. 
 payoffType = "fixed"; 
+curRound = 0; 
 
 function init(){
 
@@ -97,14 +98,20 @@ function runSimulation(){
 		payoffFcn = normalPayoffs(muT,sdT,muR,sdR,muP,sdP,muS,sdS); 
 	}
 
-	console.log(payoffType);
-	console.log(payoffFcn);
+	//Simulation speed update
+	var simSpeed = parseFloat(document.getElementById("speed").value); 
+	simSpeed = 1000-(970*simSpeed); 
+
 	//Create grid and populate it with agents
 	var g = new Grid(gridSide, canvas);
 	var a = generateAgents(nAgents, defectors,vision,budget);
 	populateGrid(g,a); 
 	repeats = setInterval(function(){simulateRound(g,repThreshold,dieThreshold,childLoss,payoffFcn); 
-	g.draw(ctx);},30);
+	g.draw(ctx);},simSpeed);
+
+	if(curRound >= maxRounds){
+		clearInterval(repeats);
+	}
 }
 
 function stopSimulation(){
@@ -155,6 +162,7 @@ function simulateRound(grid, repThreshold, dieThreshold, childLoss,payoffFcn){
 			agent.move(grid);  
 		}
 	}
+	curRound++;
 	console.log("roundCoop: ", roundCoop, "roundDef:",roundDef);
 	console.log("memo size: ", Object.keys(roundMemo).length); 
 }	
