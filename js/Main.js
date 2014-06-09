@@ -1,6 +1,7 @@
 //Globals are bad. 
 payoffType = "fixed"; 
 curRound = 0; 
+simData = "";
 
 function init(){
 
@@ -75,7 +76,16 @@ function runSimulation(){
 		var r = parseInt(document.getElementById("fR").value,10);
 		var p = parseInt(document.getElementById("fP").value,10);
 		var s = parseInt(document.getElementById("fS").value,10);
+
 		payoffFcn = fixedPayoffs(t,r,p,s); 
+
+		//Check input
+		if(isNaN(t) || isNaN(r) || isNaN(p) || isNaN(s)){
+			document.getElementById("payoffLabel").innerHTML = "Please input valid integers";
+			return; 
+		} else {
+			document.getElementById("payoffLabel").innerHTML = "Type of payoff function";
+		}
 	} else if(payoffType == "random"){
 		var minT = parseInt(document.getElementById("rMinT").value,10);
 		var maxT = parseInt(document.getElementById("rMaxT").value,10); 
@@ -85,7 +95,16 @@ function runSimulation(){
 		var maxP = parseInt(document.getElementById("rMaxP").value,10);
 		var minS = parseInt(document.getElementById("rMinS").value,10); 
 		var maxS = parseInt(document.getElementById("rMaxS").value,10); 
+
 		payoffFcn = randomPayoffs(minT,maxT,minR,maxR,minP,maxP,minS,maxS); 
+
+		if(isNaN(minT) || isNaN(maxT) || isNaN(minR) || isNaN(maxR) || 
+			isNaN(minS) || isNaN(maxS) || isNaN(minP) || isNaN(maxP)){
+			document.getElementById("payoffLabel").innerHTML = "Please input valid integers";
+			return;
+		} else {
+			document.getElementById("payoffLabel").innerHTML = "Type of payoff function";
+		}
 	}else if(payoffType == "normal"){
 		var muT = parseInt(document.getElementById("nMuT").value,10);
 		var sdT = parseInt(document.getElementById("nSdT").value,10); 
@@ -96,30 +115,55 @@ function runSimulation(){
 		var muS = parseInt(document.getElementById("nMuS").value,10); 
 		var sdS = parseInt(document.getElementById("nSdS").value,10); 
 		payoffFcn = normalPayoffs(muT,sdT,muR,sdR,muP,sdP,muS,sdS); 
+
+
+		if(isNaN(muT) || isNaN(sdT) || isNaN(muR) || isNaN(sdR) || 
+			isNaN(muS) || isNaN(sdS) || isNaN(muP) || isNaN(sdP)){
+			document.getElementById("payoffLabel").innerHTML = "Please input valid integers";
+			return;
+		} else {
+			document.getElementById("payoffLabel").innerHTML = "Type of payoff function";
+		}
 	}
 
 	//Simulation speed update
 	var simSpeed = parseFloat(document.getElementById("speed").value); 
-	simSpeed = 1000-(970*simSpeed); 
+	simSpeed = (1000 - (970*simSpeed)); 
+
+	//Get max rounds
+	var maxRounds = parseInt(document.getElementById("maxRounds").value);
+	if(isNaN(maxRounds) || maxRounds <= 0){
+		document.getElementById("maxRoundsLabel").innerHTML = "Plaease input a number greater than 0";
+		return;
+	}else {
+		document.getElementById("maxRoundsLabel").innerHTML = "Max Rounds.";
+	}
+	//Reset cur round
+	curRound = 0; 
+
+	//Initialize simulation data table
+	simData = "Action,Agent,Budget,Against,Round,PayoffType,T,R,P,S\n";
 
 	//Create grid and populate it with agents
 	var g = new Grid(gridSide, canvas);
 	var a = generateAgents(nAgents, defectors,vision,budget);
 	populateGrid(g,a); 
-	repeats = setInterval(function(){simulateRound(g,repThreshold,dieThreshold,childLoss,payoffFcn); 
-	g.draw(ctx);},simSpeed);
 
-	if(curRound >= maxRounds){
-		clearInterval(repeats);
-	}
+	repeats = setInterval(function(){simulateRound(maxRounds,g,repThreshold,dieThreshold,childLoss,payoffFcn); 
+	g.draw(ctx);},simSpeed);
 }
 
 function stopSimulation(){
 	clearInterval(repeats); 
 }
 
-function simulateRound(grid, repThreshold, dieThreshold, childLoss,payoffFcn){
+function simulateRound(maxRounds,grid, repThreshold, dieThreshold, childLoss,payoffFcn){
+	
+	if(curRound >= maxRounds)
+		clearInterval(repeats);
+
 	var roundMemo = {};
+
 	var roundCoop = 0; 
 	var roundDef = 0; 
 	for(var r = 0; r < grid.positions.length; r++){
@@ -146,15 +190,15 @@ function simulateRound(grid, repThreshold, dieThreshold, childLoss,payoffFcn){
 					//Need to change the way this is stored
 					roundMemo[agent.name + neighbours[i].agent.name] = true; 
 
-					//Gather stat data
-					if(agent.getAction())
-						roundCoop++; 
-					else 
-						roundDef++; 
-					if(neighbours[i].agent.getAction())
-						roundCoop++; 
-					else 
-						roundDef++; 
+					//Add for this agent
+					simData += String(agent.strategy)+","+agent.name+","+String(agent.budget)+
+					","+String(neighbours[i].strategy)+","+String(curRound)+","+payoffType+","+
+					String(p.T)+","+String(p.R)+","+String(p.P)+","+String(p.S)+"\n";
+
+					//Add data for neighbour
+					simData += String(neighbours[i].strategy)+","+neighbours[i].name+","+String(neighbours[i].budget)+
+					","+String(agent.strategy)+","+String(curRound)+","+payoffType+","+
+					String(p.T)+","+String(p.R)+","+String(p.P)+","+String(p.S)+"\n"; 
 				}
 			}
 			agent.die(grid,dieThreshold);
@@ -163,8 +207,8 @@ function simulateRound(grid, repThreshold, dieThreshold, childLoss,payoffFcn){
 		}
 	}
 	curRound++;
-	console.log("roundCoop: ", roundCoop, "roundDef:",roundDef);
-	console.log("memo size: ", Object.keys(roundMemo).length); 
+	//console.log("roundCoop: ", roundCoop, "roundDef:",roundDef);
+	//console.log("memo size: ", Object.keys(roundMemo).length); 
 }	
 
 function generateAgents(n,ratio,vision,budget){

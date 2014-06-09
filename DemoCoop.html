@@ -9,35 +9,35 @@
 	</div>
 	<div style="float:left">
 		<p>
-			<input id="gridSide" type ="number" min=0> 
+			<input id="gridSide" type ="number" min=0 value=30> 
 			<label id="gridSideLabel" for="gridSide">Grid side (side x side grid).</label>
 		</p> 
 		<p>
-			<input id="nAgents" type="number" min=0>
+			<input id="nAgents" type="number" min=0 value=100>
 			<label id="nAgentsLabel" for="nAgents"> Initial amount of agents.</label>
 		</p> 
 		<p>
-			<input id="defectors" type="number" min=0 step=0.01> 
+			<input id="defectors" type="number" min=0 step=0.01 value=0.5> 
 			<label id="defectorsLabel" for="defectors">Proportion of defectors</label>
 		</p>
 		<p>
-			<input id="budget" type="number"min=0> 
+			<input id="budget" type="number"min=0 value=6> 
 			<label id="budgetLabel" for="budget">Initial budget of agents.</label>
 		</p>
 		<p>
-			<input id="vision" type="number"min=0> 
+			<input id="vision" type="number"min=0 value=1> 
 			<label id="visionLabel" for="vision">Vision range of an agent.</label>
 		</p>
 		<p>
-			<input id="repThreshold" type="number"min=0> 
+			<input id="repThreshold" type="number"min=0 value=10> 
 			<label id="repLabel" for="repThreshold">Reproduction threshold.</label>
 		</p>
 		<p>
-			<input id="dieThreshold" type="number"min=0> 
+			<input id="dieThreshold" type="number"min=0 value=0> 
 			<label id="dieLabel" for = "dieThreshold">Agent death threshold.</label>
 		</p>
 		<p>
-			<input id="childLoss" type="number"min=0> 
+			<input id="childLoss" type="number"min=0 value=6> 
 			<label id="childLabel" for="childLoss">Initial endowment of child.</label>
 		</p>
 		<p>
@@ -46,16 +46,16 @@
 				<option value="random">Random Uniform</option>
 				<option value="normal">Random Normal</option>
 			</select>
-			<label for="payoffType"> Type of payoff function.</label>
+			<label id="payoffLabel" for="payoffType"> Type of payoff function.</label>
 		</p>
 		<div id="fixedInput" style="display:block">
 			<p>
-				<input id="fT" type="number"> <label for="fT"> T</label>
-				<input id="fR" type="number"> <label for="fR"> R</label>
+				<input id="fT" type="number" value=6> <label for="fT"> T</label>
+				<input id="fR" type="number" value=5> <label for="fR"> R</label>
 			</p>
 			<p>
-				<input id="fP" type="number"> <label for="fP"> P</label>
-				<input id="fS" type="number"> <label for="fS"> S</label>
+				<input id="fP" type="number" value=-5> <label for="fP"> P</label>
+				<input id="fS" type="number" value=-6> <label for="fS"> S</label>
 			</p>
 		</div>
 		<div id="randomInput" style="display:none">
@@ -104,8 +104,8 @@
 		</button>
 		<input id="speed" type="range" min="0" max="1" step="0.1">
 		<p style="position:relative; left:240px;"><label id="speedLabel" for="speed"> Adjust speed</label></p>
-		<input id="maxRounds" type="number"> 
-		<p><label for="maxRounds"> Max Rounds. </label></p>
+		<input id="maxRounds" type="number" value=100> 
+		<p><label id="maxRoundsLabel" for="maxRounds"> Max Rounds. </label></p>
 	</div>
 	<script type="text/javascript" src="js/Square.js"></script>
 	<script type="text/javascript" src="js/Grid.js"></script>
