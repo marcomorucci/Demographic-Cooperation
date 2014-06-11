@@ -6,6 +6,7 @@ function Grid(side, canvas){
 	 this.cooperators = 0; 
 	 this.defectors = 0; 
 	 this.positions = [];
+	 this.children = [];
 	 this.createSquares(side); 
 }
 

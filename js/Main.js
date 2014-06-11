@@ -138,6 +138,15 @@ function runSimulation(){
 	}else {
 		document.getElementById("maxRoundsLabel").innerHTML = "Max Rounds.";
 	}
+
+	var maxLife = parseInt(document.getElementById("maxLife").value,10);
+	if(isNaN(maxLife) || maxLife < 1){
+		document.getElementById("maxLifeLabel").innerHTML = "Please input an integer greater than 1";
+		return;
+	}else{
+		document.getElementById("maxLifeLabel").innerHTML = "Max agent life";
+	} 
+
 	//Reset cur round
 	curRound = 0; 
 
@@ -146,9 +155,9 @@ function runSimulation(){
 
 	//Create grid and populate it with agents
 	var g = new Grid(gridSide, canvas);
-	var a = generateAgents(nAgents, defectors,vision,budget);
+	var a = generateAgents(nAgents, defectors,vision,budget,maxLife);
 	populateGrid(g,a); 
-
+	g.draw(ctx); 
 	repeats = setInterval(function(){simulateRound(maxRounds,g,repThreshold,dieThreshold,childLoss,payoffFcn); 
 	g.draw(ctx);},simSpeed);
 }
@@ -162,56 +171,61 @@ function simulateRound(maxRounds,grid, repThreshold, dieThreshold, childLoss,pay
 	if(curRound >= maxRounds)
 		clearInterval(repeats);
 
+	console.log("cur round: ",curRound, "tot agents:",grid.agents.length); 
+
 	var roundMemo = {};
+	for( var a = 0; a < grid.agents.length;a++){
+		//store agent and neighbours
+		var agent = grid.agents[a]; 
+		var position = agent.position; 
+		var neighbours = grid.getNeighbours(position.row,position.col);
+			
+		//console.log("Before","name:", agent.name,"budget",agent.budget);
 
-	var roundCoop = 0; 
-	var roundDef = 0; 
-	for(var r = 0; r < grid.positions.length; r++){
-		for(var c = 0; c < grid.positions[r].length; c++){
-			//Skip grid position if this square is empty
-			if(!grid.positions[r][c].containsAgent())
-				continue; 
-			//store agent and neighbours
-			var agent = grid.positions[r][c].agent; 
-			var neighbours = grid.getNeighbours(r,c);
+		agent.move(grid);  
 
-			//Cycle through all neighbour of this square
-			for(var i = 0; i < neighbours.length; i++){
+		//Cycle through all neighbour of this square
+		for(var i = 0; i < neighbours.length; i++){
+			// For the game to be played the neighbour must contain an agent
+			// and this game must have not be played before. 
+			if(neighbours[i].containsAgent() &&
+				 (!(agent.name + neighbours[i].agent.name in roundMemo) || 
+				 	!(neighbours[i].agent.name + agent.name in roundMemo))){
 
-				// For the game to be played the neighbour must contain an agent
-				// and this game must have not be played before. 
-				if(neighbours[i].containsAgent() &&
-					 (!(agent.name + neighbours[i].agent.name in roundMemo) || 
-					 	!(neighbours[i].agent.name + agent.name in roundMemo))){
+			var p = payoffFcn();
 
-					var p = payoffFcn();
-					agent.updateBudget(neighbours[i].agent.getAction(),p);
-					neighbours[i].agent.updateBudget(agent.getAction(),p);
-					//Need to change the way this is stored
-					roundMemo[agent.name + neighbours[i].agent.name] = true; 
+			agent.updateBudget(neighbours[i].agent.getAction(),p);
+			neighbours[i].agent.updateBudget(agent.getAction(),p);
 
-					//Add for this agent
-					simData += String(agent.strategy)+","+agent.name+","+String(agent.budget)+
-					","+String(neighbours[i].strategy)+","+String(curRound)+","+payoffType+","+
-					String(p.T)+","+String(p.R)+","+String(p.P)+","+String(p.S)+"\n";
+			//Need to change the way this is stored
+			roundMemo[agent.name + neighbours[i].agent.name] = true; 
 
-					//Add data for neighbour
-					simData += String(neighbours[i].strategy)+","+neighbours[i].name+","+String(neighbours[i].budget)+
-					","+String(agent.strategy)+","+String(curRound)+","+payoffType+","+
-					String(p.T)+","+String(p.R)+","+String(p.P)+","+String(p.S)+"\n"; 
-				}
+			//Add for this agent
+			simData += String(agent.strategy)+","+agent.name+","+String(agent.budget)+
+			","+String(neighbours[i].strategy)+","+String(curRound)+","+payoffType+","+
+			String(p.T)+","+String(p.R)+","+String(p.P)+","+String(p.S)+"\n";
+
+			//Add data for neighbour
+			simData += String(neighbours[i].strategy)+","+neighbours[i].name+","+String(neighbours[i].budget)+
+			","+String(agent.strategy)+","+String(curRound)+","+payoffType+","+
+			String(p.T)+","+String(p.R)+","+String(p.P)+","+String(p.S)+"\n"; 
 			}
-			agent.die(grid,dieThreshold);
-			agent.reproduce(grid,repThreshold,childLoss);
-			agent.move(grid);  
 		}
-	}
-	curRound++;
-	//console.log("roundCoop: ", roundCoop, "roundDef:",roundDef);
-	//console.log("memo size: ", Object.keys(roundMemo).length); 
-}	
 
-function generateAgents(n,ratio,vision,budget){
+		agent.die(grid,dieThreshold);
+		agent.reproduce(grid,repThreshold,childLoss);
+		//console.log("After:","name:", agent.name,"budget",agent.budget);
+	}
+	
+	//add children to agents list
+	for (var c = 0; c < grid.children.length; c++)
+		grid.agents.push(grid.children[c]);
+	grid.children = [];
+
+	curRound++;
+}
+
+function generateAgents(n,ratio,vision,budget,maxLife){
 	var agents = [];
 	for(var i = 0; i < n; i++){
 		var s; 
@@ -219,7 +233,7 @@ function generateAgents(n,ratio,vision,budget){
 		if(Math.random() < ratio) s = false; 
 		else s = true; 
 
-		var a = new Agent(s,null,String(i),vision,budget);
+		var a = new Agent(s,null,String(i),vision,budget,maxLife);
 		agents.push(a); 
 	}
 	return agents; 
