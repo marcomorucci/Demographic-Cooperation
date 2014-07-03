@@ -6,7 +6,7 @@ function Grid(side, canvas){
 	 this.cooperators = 0; 
 	 this.defectors = 0; 
 	 this.positions = [];
-	 this.children = [];
+	 this.neighbours = document.getElementById("neighbourhood").value; //This is bad
 	 this.createSquares(side); 
 }
 
@@ -42,15 +42,17 @@ Grid.prototype.createSquares = function(){
 Grid.prototype.getNeighbours = function(r,c){
 
 	var neighbours = [];
-
 	neighbours.push(this.wrap(r-1,c));
 	neighbours.push(this.wrap(r+1,c));
 	neighbours.push(this.wrap(r,c-1));
 	neighbours.push(this.wrap(r,c+1));
-	neighbours.push(this.wrap(r-1,c-1));
-	neighbours.push(this.wrap(r-1,c+1));
-	neighbours.push(this.wrap(r+1,c-1));
-	neighbours.push(this.wrap(r+1,c+1));
+
+	if(this.neighbours == "Moore"){
+		neighbours.push(this.wrap(r-1,c-1));
+		neighbours.push(this.wrap(r-1,c+1));
+		neighbours.push(this.wrap(r+1,c-1));
+		neighbours.push(this.wrap(r+1,c+1));
+	}
 
 	return neighbours; 
 };
@@ -81,7 +83,10 @@ Grid.prototype.getSquaresInRadius = function(radius,r,c){
 
 	var neighbours = this.getNeighbours(r,c);
 	var closest = [];
-	for (var i = 4; i<neighbours.length; i++){
+
+	//Von Neumann nodes can be skipped when considering moore neighbourhoods. 
+	if(this.neighbours == "Moore")	i = 4; else i = 0;
+	for (i; i<neighbours.length; i++){
 		var outer = this.getSquaresInRadius(radius-1,neighbours[i].row, neighbours[i].col);
 		for(var l = 0; l < outer.length; l++)
 			closest.push(outer[l]);

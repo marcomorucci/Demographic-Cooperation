@@ -2,12 +2,19 @@
 payoffType = "fixed"; 
 curRound = 0; 
 simData = "";
+actionsRecord = [];
+lifeRecord = [];
+running = false; 
 
 function init(){
 
 }
 
 function runSimulation(){
+
+	if(running)
+		stopSimulation(); 
+
 	var canvas = document.getElementById("canvas");
 	var ctx = canvas.getContext("2d");
 	
@@ -152,18 +159,23 @@ function runSimulation(){
 
 	//Initialize simulation data table
 	simData = "Action,Agent,Budget,Against,Round,PayoffType,T,R,P,S\n";
+	actionsRecord = [];
+	lifeRecord = [];
 
 	//Create grid and populate it with agents
 	var g = new Grid(gridSide, canvas);
 	var a = generateAgents(nAgents, defectors,vision,budget,maxLife);
 	populateGrid(g,a); 
 	g.draw(ctx); 
-	repeats = setInterval(function(){simulateRound(maxRounds,g,repThreshold,dieThreshold,childLoss,payoffFcn); 
+	running = true; 
+	repeats = setInterval(function(){simulateRound(maxRounds,g,repThreshold,dieThreshold,
+		childLoss,payoffFcn); 
 	g.draw(ctx);},simSpeed);
 }
 
 function stopSimulation(){
 	clearInterval(repeats); 
+	running = false; 
 }
 
 function simulateRound(maxRounds,grid, repThreshold, dieThreshold, childLoss,payoffFcn){
@@ -174,6 +186,14 @@ function simulateRound(maxRounds,grid, repThreshold, dieThreshold, childLoss,pay
 	console.log("cur round: ",curRound, "tot agents:",grid.agents.length); 
 
 	var roundMemo = {};
+	var roundCoop = 0; 
+	var roundDef = 0; 
+	var roundChildren = 0;
+	var roundDeaths = 0; 
+
+	//Shuffle agent order
+	shuffleArray(grid.agents);
+
 	for( var a = 0; a < grid.agents.length;a++){
 		//store agent and neighbours
 		var agent = grid.agents[a]; 
@@ -182,45 +202,59 @@ function simulateRound(maxRounds,grid, repThreshold, dieThreshold, childLoss,pay
 			
 		//console.log("Before","name:", agent.name,"budget",agent.budget);
 
-		agent.move(grid);  
-
 		//Cycle through all neighbour of this square
 		for(var i = 0; i < neighbours.length; i++){
+
 			// For the game to be played the neighbour must contain an agent
 			// and this game must have not be played before. 
-			if(neighbours[i].containsAgent() &&
-				 (!(agent.name + neighbours[i].agent.name in roundMemo) || 
-				 	!(neighbours[i].agent.name + agent.name in roundMemo))){
+			if(neighbours[i].containsAgent()){
+				var p = payoffFcn();
 
-			var p = payoffFcn();
+				agent.updateBudget(neighbours[i].agent.getAction(),p);
+				neighbours[i].agent.updateBudget(agent.getAction(),p);
 
-			agent.updateBudget(neighbours[i].agent.getAction(),p);
-			neighbours[i].agent.updateBudget(agent.getAction(),p);
+				//Add for this agent
+				//simData += String(agent.strategy)+","+agent.name+","+String(agent.budget)+
+				//","+String(neighbours[i].strategy)+","+String(curRound)+","+payoffType+","+
+				//String(p.T)+","+String(p.R)+","+String(p.P)+","+String(p.S)+"\n";
 
-			//Need to change the way this is stored
-			roundMemo[agent.name + neighbours[i].agent.name] = true; 
+				//Add data for neighbour
+				//simData += String(neighbours[i].strategy)+","+neighbours[i].name+","+
+				//String(neighbours[i].budget)+ ","+String(agent.strategy)+","+
+				//String(curRound)+","+payoffType+","+ String(p.T)+","+String(p.R)+
+				//","+String(p.P)+","+String(p.S)+"\n"; 
 
-			//Add for this agent
-			simData += String(agent.strategy)+","+agent.name+","+String(agent.budget)+
-			","+String(neighbours[i].strategy)+","+String(curRound)+","+payoffType+","+
-			String(p.T)+","+String(p.R)+","+String(p.P)+","+String(p.S)+"\n";
-
-			//Add data for neighbour
-			simData += String(neighbours[i].strategy)+","+neighbours[i].name+","+String(neighbours[i].budget)+
-			","+String(agent.strategy)+","+String(curRound)+","+payoffType+","+
-			String(p.T)+","+String(p.R)+","+String(p.P)+","+String(p.S)+"\n"; 
+				if(agent.getAction())
+					roundCoop++;
+				else
+					roundDef++;
+				if(neighbours[i].agent.getAction())
+					roundCoop++;
+				else
+					roundDef++;
 			}
 		}
 
-		agent.die(grid,dieThreshold);
-		agent.reproduce(grid,repThreshold,childLoss);
 		//console.log("After:","name:", agent.name,"budget",agent.budget);
 	}
 	
-	//add children to agents list
-	for (var c = 0; c < grid.children.length; c++)
-		grid.agents.push(grid.children[c]);
-	grid.children = [];
+	//Synchronus updating
+	for(var c = 0; c < grid.agents.length; c++){
+	 	if (grid.agents[c].die(grid,dieThreshold)){
+			roundDeaths++; 
+	 	}else{
+	 		if (grid.agents[c].reproduce(grid,repThreshold,childLoss))
+	 			roundChildren++;
+	 		grid.agents[c].move(grid);
+	 	}
+	}
+
+	actionsRecord.push([curRound,roundCoop,roundDef]);
+	lifeRecord.push([curRound,roundChildren,roundDeaths]);
+	a = new Dygraph(document.getElementById("ActionGraph"), 
+		actionsRecord,{labels: ["Round","Cooperations","Defections"]});
+	l = new Dygraph(document.getElementById("LifeGraph"), 
+		lifeRecord,{labels: ["Round","Reproductions","Deaths"]});
 
 	curRound++;
 }
@@ -263,58 +297,16 @@ function populateGrid(grid,agents){
 	}
 }
 
-function fixedPayoffs(t,r,p,s){
-	return function(){
-		return {T:t,R:r,P:p,S:s};
-	};
-}
-
-function randomPayoffs(minT,maxT,minR,maxR,minP,maxP,minS,maxS){
-
-	return function() {
-		var t = Math.floor(Math.random()*(maxT-minT+1)+minT);
-		var r = Math.floor(Math.random()*(maxR-minR+1)+minR); 
-		var p = Math.floor(Math.random()*(maxP-minP+1)+minP);
-		var s = Math.floor(Math.random()*(maxS-minS+1)+minS);
-		return {T:t,R:r,P:p,S:s};
-	};
-}
-
-function normalPayoffs(avT,sdT,avR,sdR,avP,sdP,avS,sdS){
-
-	return function(){
-		var t = Math.round(rnd()*sdT+avT);
-		var r = Math.round(rnd()*sdR+avR);
-		var p = Math.round(rnd()*sdP+avP);
-		var s = Math.round(rnd()*sdS+avS); 
-		return {T:t,R:r,P:p,S:s};
-	};
-}
-
-function rnd(){
-	return (Math.random()*2-1)+(Math.random()*2-1)+(Math.random()*2-1);
-}
-
-function changePayoffInput(){
-	var fixed = document.getElementById("fixedInput"); 
-	var random = document.getElementById("randomInput");
-	var normal = document.getElementById("normalInput");
-
-	var opt = document.getElementById("payoffType");
-	if(opt.value=="fixed"){
-		random.style="display:none";
-		normal.style="display:none"; 
-		fixed.style="display:block";
-		payoffType = "fixed"; 
-	} else if (opt.value == "random"){
-		normal.style="display:none"; 
-		fixed.style="display:none";
-		random.style="display:block";
-		payoffType = "random"; 
-	} else if (opt.value == "normal"){
-		fixed.style="display:none";
-		random.style="display:none";
-		normal.style="display:block"; 	
-		payoffType = "normal";
-	}
+/**
+ * Randomize array element order in-place.
+ * Using Fisher-Yates shuffle algorithm.
+ */
+function shuffleArray(array) {
+    for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+    return array;
 }

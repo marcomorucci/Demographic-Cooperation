@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 
 <html>
+<head>
+    <script type="text/javascript" src="js/dygraph-combined.js"></script>
+	<script type="text/javascript" src="js/Square.js"></script>
+	<script type="text/javascript" src="js/Grid.js"></script>
+	<script type="text/javascript" src="js/Agent.js"></script>
+	<script type="text/javascript" src="js/Main.js"></script>
+	<script type="text/javascript" src="js/Test.js"></script>
+	<script type="text/javascript" src="js/Payoffs.js"></script>
+</head>
+
 <body onload="init();">
 	<div style="float:left">
 		<canvas id="canvas" width="500" height="500" style="border:1px solid gray">
@@ -9,40 +19,47 @@
 	</div>
 	<div style="float:left">
 		<p>
-			<input id="gridSide" type ="number" min=0 value=30> 
+			<input id="gridSide" type ="number" min=0 value=30 maxlength="3" style="width:40px"> 
 			<label id="gridSideLabel" for="gridSide">Grid side (side x side grid).</label>
 		</p> 
 		<p>
-			<input id="nAgents" type="number" min=0 value=100>
+			<input id="nAgents" type="number" min=0 value=100 style="width:40px">
 			<label id="nAgentsLabel" for="nAgents"> Initial amount of agents.</label>
 		</p> 
 		<p>
-			<input id="defectors" type="number" min=0 step=0.01 value=0.5> 
+			<input id="defectors" type="number" min=0 step=0.01 value=0.5 style="width:40px"> 
 			<label id="defectorsLabel" for="defectors">Proportion of defectors</label>
 		</p>
 		<p>
-			<input id="budget" type="number"min=0 value=6> 
+			<input id="budget" type="number"min=0 value=6 style="width:40px"> 
 			<label id="budgetLabel" for="budget">Initial budget of agents.</label>
 		</p>
 		<p>
-			<input id="vision" type="number"min=0 value=1> 
+			<input id="vision" type="number"min=0 value=1 style="width:40px"> 
 			<label id="visionLabel" for="vision">Vision range of an agent.</label>
 		</p>
 		<p>
-			<input id="repThreshold" type="number"min=0 value=10> 
+			<input id="repThreshold" type="number"min=0 value=10 style="width:40px"> 
 			<label id="repLabel" for="repThreshold">Reproduction threshold.</label>
 		</p>
 		<p>
-			<input id="dieThreshold" type="number"min=0 value=0> 
+			<input id="dieThreshold" type="number"min=0 value=0 style="width:40px"> 
 			<label id="dieLabel" for = "dieThreshold">Agent death threshold.</label>
 		</p>
 		<p>
-			<input id="childLoss" type="number"min=0 value=6> 
+			<input id="childLoss" type="number"min=0 value=6 style="width:40px"> 
 			<label id="childLabel" for="childLoss">Initial endowment of child.</label>
 		</p>
 		<p>
-			<input id="maxLife" type = "number" min=1 value=100>
+			<input id="maxLife" type = "number" min=1 value=100 style="width:40px">
 			<label id="maxLifeLabel" for="maxLife">Max agent lifespan</label>
+		</p>
+		<p>
+			<select id="neighbourhood">
+				<option value="Von Neumann"> Von Neumann</option>
+				<option value="Moore"> Moore</option>
+			</select>
+			<label id="neighbourLabel" for="neighbourhood"> Type of agent neighbourhood. </label>
 		</p>
 		<p>
 			<select id="payoffType" onclick="changePayoffInput();">
@@ -54,52 +71,52 @@
 		</p>
 		<div id="fixedInput" style="display:block">
 			<p>
-				<input id="fT" type="number" value=6> <label for="fT"> T</label>
-				<input id="fR" type="number" value=5> <label for="fR"> R</label>
+				<input id="fT" type="number" value=6 style="width:40px"> <label for="fT"> T</label>
+				<input id="fR" type="number" value=5 style="width:40px"> <label for="fR"> R</label>
 			</p>
 			<p>
-				<input id="fP" type="number" value=-5> <label for="fP"> P</label>
-				<input id="fS" type="number" value=-6> <label for="fS"> S</label>
+				<input id="fP" type="number" value=-5 style="width:40px"> <label for="fP"> P</label>
+				<input id="fS" type="number" value=-6 style="width:40px"> <label for="fS"> S</label>
 			</p>
 		</div>
 		<div id="randomInput" style="display:none">
 			<p>
-				<input id="rMinT" type="number"> <label for="rMinT"> Min T</label>
-				<input id="rMaxT" type="number"> <label for="rMaxT"> Max T</label>
+				<input id="rMinT" type="number" value=2 style="width:40px"> <label for="rMinT"> Min T</label>
+				<input id="rMaxT" type="number" value=6 style="width:40px"> <label for="rMaxT"> Max T</label>
 			</p>
 			<p>
-				<input id="rMinR" type="number"> <label for="rMinR"> Min R</label>
-				<input id="rMaxR" type="number"> <label for="rMaxR"> Max R</label>
+				<input id="rMinR" type="number" value=1 style="width:40px"> <label for="rMinR"> Min R</label>
+				<input id="rMaxR" type="number" value=5 style="width:40px"> <label for="rMaxR"> Max R</label>
 			</p>
 			<p>
-				<input id="rMinP" type="number"> <label for="rMinP"> Min P</label>
-				<input id="rMaxP" type="number"> <label for="rMaxP"> Max P</label>
+				<input id="rMinP" type="number" value=-1 style="width:40px"> <label for="rMinP"> Min P</label>
+				<input id="rMaxP" type="number" value=-5 style="width:40px"> <label for="rMaxP"> Max P</label>
 			</p>
 			<p>
-				<input id="rMinS" type="number"> <label for="rMinS"> Min S</label>
-				<input id="rMaxS" type="number"> <label for="rMaxS"> Max S</label>
+				<input id="rMinS" type="number" value=-2 style="width:40px"> <label for="rMinS"> Min S</label>
+				<input id="rMaxS" type="number" value=-6 style="width:40px"> <label for="rMaxS"> Max S</label>
 			</p>
 		</div>
 		<div id="normalInput" style="display:none">
 			<p>
-				<input id="nMuT" type="number"> <label for="nMuT"> Mean T</label>
-				<input id="nSdT" type="number"> <label for="nSdT"> Std  T</label>
+				<input id="nMuT" type="number" value=3 style="width:40px"> <label for="nMuT"> Mean T</label>
+				<input id="nSdT" type="number" value=2 style="width:40px"> <label for="nSdT"> Std  T</label>
 			</p>
 			<p>
-				<input id="nMuR" type="number"> <label for="nMuR"> Mean R</label>
-				<input id="nSdR" type="number"> <label for="nSdR"> Std R</label>
+				<input id="nMuR" type="number" value=2 style="width:40px"> <label for="nMuR"> Mean R</label>
+				<input id="nSdR" type="number" value=2 style="width:40px"> <label for="nSdR"> Std R</label>
 			</p>
 			<p>
-				<input id="nMuP" type="number"> <label for="nMuP"> Mean P</label>
-				<input id="nSdP" type="number"> <label for="nSdP"> Std P</label>
+				<input id="nMuP" type="number" value=-2 style="width:40px"> <label for="nMuP"> Mean P</label>
+				<input id="nSdP" type="number" value=2 style="width:40px"> <label for="nSdP"> Std P</label>
 			</p>
 			<p>
-				<input id="nMuS" type="number"> <label for="nMuS"> Mean S</label>
-				<input id="nSdS" type="number"> <label for="nSdS"> Std S</label>
+				<input id="nMuS" type="number" value=-3 style="width:40px"> <label for="nMuS"> Mean S</label>
+				<input id="nSdS" type="number" value=2 style="width:40px"> <label for="nSdS"> Std S</label>
 			</p>
 		</div>
 	</div>
-	<div style="position:fixed; right:550px; top:530px">
+	<div style="position:fixed; right:1300px; top:530px">
 		<button onclick="runSimulation(100,10,0,6)" id="Run">
 				Run Simulation
 		</button>
@@ -107,14 +124,20 @@
 				Stop Simulation
 		</button>
 		<input id="speed" type="range" min="0" max="1" step="0.1">
-		<p style="position:relative; left:240px;"><label id="speedLabel" for="speed"> Adjust speed</label></p>
+		<p style="position:relative; left:240px;"><label id="speedLabel" for="speed"> 
+			Adjust speed
+		</label></p>
 		<input id="maxRounds" type="number" value=100> 
 		<p><label id="maxRoundsLabel" for="maxRounds"> Max Rounds. </label></p>
 	</div>
-	<script type="text/javascript" src="js/Square.js"></script>
-	<script type="text/javascript" src="js/Grid.js"></script>
-	<script type="text/javascript" src="js/Agent.js"></script>
-	<script type="text/javascript" src="js/Main.js"></script>
-	<script type="text/javascript" src="js/Test.js"></script>
+
+	<div id="ActionGraph" style="position:fixed; left:1000px">
+		Actions per round graph.
+	</div>
+
+	<div id="LifeGraph" style="position:fixed; left:1000px; top:350px">
+		Life/Deaths per round graph.
+	</div>
+
 </body>
 </html>

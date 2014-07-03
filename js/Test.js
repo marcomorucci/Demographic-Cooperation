@@ -47,8 +47,11 @@ function testUpdateBudget(){
 function testAgentMovement(grid){
 	var a = new Agent(true,grid.positions[3][3],"a",2,10);
 	var n = grid.getSquaresInRadius(a.vision,3,3); 
-	for(var i = 0; i < n.length; i++)
+	console.log(n.length,": neighbours found");
+	for(var i = 0; i < n.length; i++){
 		n[i].color = "#98E453";
+		console.log(n[i].row,n[i].col);
+	}
 	a.move(grid);
 }
 

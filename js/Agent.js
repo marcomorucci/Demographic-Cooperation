@@ -47,21 +47,21 @@ Agent.prototype.move = function(grid){
 Agent.prototype.reproduce = function(grid,threshold,loss){
 	//Do nothing if reproduction threshold is not met
 	if(this.budget < threshold)
-		return; 
+		return false; 
 
 	//Setup child position or return if no squares are available
 	var childPos = this.chooseRandomSquare(grid); 
 	if(childPos === null)
-		return; 
+		return false; 
 
 	//Instantiate a child with same strategy and random position within vision
 	var child = new Agent(this.strategy,childPos,
-		String(grid.agents.length + grid.children.length),this.vision, loss,this.maxLife); 
+		String(grid.agents.length),this.vision, loss,this.maxLife); 
 	
 	//Uodate square child is now on
 	child.position.setAgent(child);
 	//Update agents count 
-	grid.children.push(child);
+	grid.agents.push(child);
 	//Update agents count
 	if(this.strategy)
 		grid.cooperators++; 
@@ -69,23 +69,27 @@ Agent.prototype.reproduce = function(grid,threshold,loss){
 		grid.defectors++; 
 	//Take initial child budget from agent budget
 	this.budget -= loss; 
+
+	return true; 
 };
 
 
 Agent.prototype.die = function(grid, threshold){
 	if(this.budget >= threshold && this.curLife <= this.maxLife){
 		this.curLife++;
-		return; 
+		return false; 
 	}
 	//Remove from square
 	this.position.setAgent(null);
 	//Remove self from agents list 
-	grid.agents.splice(grid.agents.indexOf(this),1); 
+	grid.agents.splice(grid.agents.indexOf(this),1);
 	//Update agents count
 	if(this.strategy)
 		grid.cooperators--; 
 	else
 		grid.defectors--; 
+
+	return true;
 };
 
 Agent.prototype.chooseRandomSquare = function(grid){
