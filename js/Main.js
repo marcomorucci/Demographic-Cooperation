@@ -154,6 +154,24 @@ function runSimulation(){
 		document.getElementById("maxLifeLabel").innerHTML = "Max agent life";
 	} 
 
+	//Get actions order
+	var updateMode = document.getElementById("updateMode").value;  
+	var actPos = parseInt(document.getElementById("Play").value); 
+	var movePos = parseInt(document.getElementById("Move").value); 
+	var repPos = parseInt(document.getElementById("Reproduce").value); 
+	var diePos = parseInt(document.getElementById("Die").value); 
+
+	if(actPos == movePos || actPos == repPos || actPos == diePos || movePos == repPos || 
+		movePos == repPos || movePos == diePos || repPos == diePos){
+		document.getElementById("updateLabel").innerHTML = "No two moves can have the same position";
+		return; 
+	} else{
+		document.getElementById("updateLabel").innerHTML = "Update Mode";
+	}
+
+	//Generate action functions
+	var order = createUpdateOrder(updateMode,actPos,movePos,diePos,repPos); 
+
 	//Reset cur round
 	curRound = 0; 
 
@@ -169,7 +187,7 @@ function runSimulation(){
 	g.draw(ctx); 
 	running = true; 
 	repeats = setInterval(function(){simulateRound(maxRounds,g,repThreshold,dieThreshold,
-		childLoss,payoffFcn); 
+		childLoss,payoffFcn,order,updateMode); 
 	g.draw(ctx);},simSpeed);
 }
 
@@ -178,85 +196,213 @@ function stopSimulation(){
 	running = false; 
 }
 
-function simulateRound(maxRounds,grid, repThreshold, dieThreshold, childLoss,payoffFcn){
+function simulateRound(maxRounds,grid, repThreshold, dieThreshold, childLoss,payoffFcn,updateOrder,updateMode){
 	
 	if(curRound >= maxRounds)
 		clearInterval(repeats);
 
 	console.log("cur round: ",curRound, "tot agents:",grid.agents.length); 
 
-	var roundMemo = {};
-	var roundCoop = 0; 
-	var roundDef = 0; 
-	var roundChildren = 0;
-	var roundDeaths = 0; 
+	var roundData = {coop:0, def:0, move:0, life:0, death:0};
 
 	//Shuffle agent order
 	shuffleArray(grid.agents);
 
-	for( var a = 0; a < grid.agents.length;a++){
-		//store agent and neighbours
-		var agent = grid.agents[a]; 
-		var position = agent.position; 
-		var neighbours = grid.getNeighbours(position.row,position.col);
-			
-		//console.log("Before","name:", agent.name,"budget",agent.budget);
-
-		//Cycle through all neighbour of this square
-		for(var i = 0; i < neighbours.length; i++){
-
-			// For the game to be played the neighbour must contain an agent
-			// and this game must have not be played before. 
-			if(neighbours[i].containsAgent()){
-				var p = payoffFcn();
-
-				agent.updateBudget(neighbours[i].agent.getAction(),p);
-				neighbours[i].agent.updateBudget(agent.getAction(),p);
-
-				//Add for this agent
-				//simData += String(agent.strategy)+","+agent.name+","+String(agent.budget)+
-				//","+String(neighbours[i].strategy)+","+String(curRound)+","+payoffType+","+
-				//String(p.T)+","+String(p.R)+","+String(p.P)+","+String(p.S)+"\n";
-
-				//Add data for neighbour
-				//simData += String(neighbours[i].strategy)+","+neighbours[i].name+","+
-				//String(neighbours[i].budget)+ ","+String(agent.strategy)+","+
-				//String(curRound)+","+payoffType+","+ String(p.T)+","+String(p.R)+
-				//","+String(p.P)+","+String(p.S)+"\n"; 
-
-				if(agent.getAction())
-					roundCoop++;
-				else
-					roundDef++;
-				if(neighbours[i].agent.getAction())
-					roundCoop++;
-				else
-					roundDef++;
-			}
+	if(updateMode == "Synchronous"){
+		//Synchronus updating
+		updateOrder.first(grid,repThreshold,dieThreshold,childLoss,payoffFcn,roundData);
+		updateOrder.second(grid,repThreshold,dieThreshold,childLoss,payoffFcn,roundData);
+		updateOrder.third(grid,repThreshold,dieThreshold,childLoss,payoffFcn,roundData);
+		updateOrder.fourth(grid,repThreshold,dieThreshold,childLoss,payoffFcn,roundData);
+	}else{
+		//Asynchronous updating
+		for(var i = grid.agents.length-1; i >= 0; i--){
+			updateOrder.first(grid,grid.agents[i],repThreshold,dieThreshold,childLoss,payoffFcn,roundData);
+			updateOrder.second(grid,grid.agents[i],repThreshold,dieThreshold,childLoss,payoffFcn,roundData);
+			updateOrder.third(grid,grid.agents[i],repThreshold,dieThreshold,childLoss,payoffFcn,roundData);
+			updateOrder.fourth(grid,grid.agents[i],repThreshold,dieThreshold,childLoss,payoffFcn,roundData);
 		}
-
-		//console.log("After:","name:", agent.name,"budget",agent.budget);
 	}
-	
-	//Synchronus updating
-	for(var c = 0; c < grid.agents.length; c++){
-	 	if (grid.agents[c].die(grid,dieThreshold)){
-			roundDeaths++; 
-	 	}else{
-	 		if (grid.agents[c].reproduce(grid,repThreshold,childLoss))
-	 			roundChildren++;
-	 		grid.agents[c].move(grid);
-	 	}
-	}
-
-	actionsRecord.push([curRound,roundCoop,roundDef]);
-	lifeRecord.push([curRound,roundChildren,roundDeaths]);
-	a = new Dygraph(document.getElementById("ActionGraph"), 
-		actionsRecord,{labels: ["Round","Cooperations","Defections"]});
-	l = new Dygraph(document.getElementById("LifeGraph"), 
-		lifeRecord,{labels: ["Round","Reproductions","Deaths"]});
+	 actionsRecord.push([curRound,roundData.coop,roundData.def]);
+	 lifeRecord.push([curRound,roundData.life,roundData.death]);
+	 a = new Dygraph(document.getElementById("ActionGraph"), 
+	 	actionsRecord,{labels: ["Round","Cooperations","Defections"]});
+	 l = new Dygraph(document.getElementById("LifeGraph"), 
+	 	lifeRecord,{labels: ["Round","Reproductions","Deaths"]});
 
 	curRound++;
+}
+
+function createUpdateOrder(updateMode, actPos, movePos, diePos, repPos){
+	var order = {};
+	switch(actPos){
+		case 1:
+			if(updateMode == "Synchronous")
+				order.first = allAct; 
+			else
+				order.first = asyncAct;
+			break; 
+		case 2:
+			if(updateMode == "Synchronous")
+				order.second = allAct; 
+			else
+				order.second = asyncAct;
+			break; 
+		case 3: 
+			if(updateMode == "Synchronous")
+				order.third = allAct; 
+			else
+				order.third = asyncAct;
+			break;
+		case 4: 
+			if(updateMode == "Synchronous")
+				order.fourth = allAct; 
+			else
+				order.fourth = asyncAct;
+			break; 
+	}
+	switch(movePos){
+		case 1:
+			if(updateMode == "Synchronous")
+				order.first = allMove; 
+			else
+				order.first = asyncMove;
+			break; 
+		case 2:
+			if(updateMode == "Synchronous")
+				order.second = allMove; 
+			else
+				order.second = asyncMove;
+			break;  
+		case 3: 
+			if(updateMode == "Synchronous")
+				order.third = allMove; 
+			else
+				order.third = asyncMove;
+			break; 
+		case 4: 
+			if(updateMode == "Synchronous")
+				order.fourth = allMove; 
+			else
+				order.fourth = asyncMove;
+			break; 
+	}
+	switch(diePos){
+		case 1:
+			if(updateMode == "Synchronous")
+				order.first = allDie; 
+			else
+				order.first = asyncDie;
+			break; 	
+		case 2:
+			if(updateMode == "Synchronous")
+				order.second = allDie; 
+			else
+				order.second = asyncDie;
+			break; 
+		case 3: 
+			if(updateMode == "Synchronous")
+				order.third = allDie; 
+			else
+				order.third = asyncDie;
+			break; 
+		case 4: 
+			if(updateMode == "Synchronous")
+				order.fourth = allDie; 
+			else
+				order.fourth = asyncDie;
+			break; 
+	}
+	switch(repPos){
+		case 1:
+			if(updateMode == "Synchronous")
+				order.first = allReproduce; 
+			else
+				order.first = asyncReproduce;
+			break; 
+		case 2:
+			if(updateMode == "Synchronous")
+				order.second = allReproduce; 
+			else
+				order.second = asyncReproduce;
+			break; 
+		case 3: 
+			if(updateMode == "Synchronous")
+				order.third = allReproduce; 
+			else
+				order.third = asyncReproduce;
+			break; 
+		case 4: 
+			if(updateMode == "Synchronous")
+				order.fourth = allReproduce; 
+			else
+				order.fourth = asyncReproduce;
+			break; 
+	}
+	return order; 
+}
+
+function asyncAct(grid,agent,repThreshold,dieThreshold,childLoss,payoffFcn,roundData){
+	var position = agent.position; 
+	var neighbours = grid.getNeighbours(position.row,position.col);
+		
+	//Cycle through all neighbour of this square
+	for(var i = 0; i < neighbours.length; i++){
+
+		// For the game to be played the neighbour must contain an agent
+		// and this game must have not be played before. 
+		if(neighbours[i].containsAgent()){
+			var p = payoffFcn();
+
+			agent.updateBudget(neighbours[i].agent.getAction(),p);
+			neighbours[i].agent.updateBudget(agent.getAction(),p);
+
+			if(agent.getAction())
+				roundData.coop++;
+			else
+				roundData.def++;
+			if(neighbours[i].agent.getAction())
+				roundData.coop++;
+			else
+				roundData.def++;
+		}
+	}
+}
+
+function asyncMove(grid,agent,repThreshold,dieThreshold,childLoss,payoffFcn,roundData){
+	if(agent.move(grid))
+		roundData.move++; 
+}
+
+function asyncReproduce(grid,agent,repThreshold,dieThreshold,childLoss,payoffFcn,roundData){
+	if(agent.reproduce(grid,repThreshold,childLoss))
+		roundData.life++;
+}
+
+function asyncDie(grid,agent,repThreshold,dieThreshold,childLoss,payoffFcn,roundData){
+	if(agent.die(grid,dieThreshold))
+		roundData.death++;
+}
+
+function allAct(grid,repThreshold,dieThreshold,childLoss,payoffFcn,roundData){
+	for( var a = 0; a < grid.agents.length;a++){
+		asyncAct(grid,grid.agents[a],repThreshold,dieThreshold,childLoss,payoffFcn,roundData);
+	}
+}
+
+function allReproduce(grid,repThreshold,dieThreshold,childLoss,payoffFcn,roundData){
+	for (var c = 0; c < grid.agents.length; c++)
+		asyncReproduce(grid,grid.agents[c],repThreshold,dieThreshold,childLoss,payoffFcn,roundData);
+}
+
+function allDie(grid,repThreshold,dieThreshold,childLoss,payoffFcn,roundData){
+	for(var c = grid.agents.length-1; c >= 0; c--)
+		asyncDie(grid,grid.agents[c],repThreshold,dieThreshold,childLoss,payoffFcn,roundData); 
+}
+
+function allMove(grid,repThreshold,dieThreshold,childLoss,payoffFcn,roundData){
+	for(var c = 0; c < grid.agents.length; c++)
+		asyncMove(grid,grid.agents[c],repThreshold,dieThreshold,childLoss,payoffFcn,roundData);
 }
 
 function generateAgents(n,ratio,vision,budget,maxLife){
@@ -297,6 +443,20 @@ function populateGrid(grid,agents){
 	}
 }
 
+
+
+function storeData(){
+	//Add for this agent
+	//simData += String(agent.strategy)+","+agent.name+","+String(agent.budget)+
+	//","+String(neighbours[i].strategy)+","+String(curRound)+","+payoffType+","+
+	//String(p.T)+","+String(p.R)+","+String(p.P)+","+String(p.S)+"\n";
+
+	//Add data for neighbour
+	//simData += String(neighbours[i].strategy)+","+neighbours[i].name+","+
+	//String(neighbours[i].budget)+ ","+String(agent.strategy)+","+
+	//String(curRound)+","+payoffType+","+ String(p.T)+","+String(p.R)+
+	//","+String(p.P)+","+String(p.S)+"\n"; 
+}
 /**
  * Randomize array element order in-place.
  * Using Fisher-Yates shuffle algorithm.

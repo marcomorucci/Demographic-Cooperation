@@ -31,7 +31,7 @@ Agent.prototype.updateBudget = function(action, payoffs){
 Agent.prototype.move = function(grid){
 	var newPos = this.chooseRandomSquare(grid); 
 	if(newPos === null)
-		return;
+		return false;
 
 	//Remove self from current square
 	this.position.setAgent(null);
@@ -42,6 +42,8 @@ Agent.prototype.move = function(grid){
 	//Check for correct update
 	if(!this.position.containsAgent())
 		throw "ERROR: Couldn't update agent location"; 
+
+	return true;
 };	
 
 Agent.prototype.reproduce = function(grid,threshold,loss){

@@ -16,6 +16,6 @@ of Joshua Epstein's cooperation model.
 	- difference in coop/defectors with prev round.
 	- #of successful movements
 	- %of coop/def that changed position
-- Move/act/reproduce/die order customization
-- Asynchronus updating option
+- Move/act/reproduce/die order customization √
+- Asynchronus updating option √
 - Reset function
