@@ -9,6 +9,7 @@
 	<script type="text/javascript" src="js/Main.js"></script>
 	<script type="text/javascript" src="js/Test.js"></script>
 	<script type="text/javascript" src="js/Payoffs.js"></script>
+	<script type="text/javascript" src="js/Graphs.js"></script>
 </head>
 
 <body onload="init();">
@@ -84,8 +85,10 @@
 			<label id="childLabel" for="childLoss">Initial endowment of child.</label>
 		</p>
 		<p>
+			<input id="minLife" type = "number" min=1 value=70 style="width:40px">
+			<label id="minLifeLabel" for="minLife">Min Life</label>
 			<input id="maxLife" type = "number" min=1 value=100 style="width:40px">
-			<label id="maxLifeLabel" for="maxLife">Max agent lifespan</label>
+			<label id="maxLifeLabel" for="maxLife">Max Life</label>
 		</p>
 		<p>
 			<select id="neighbourhood">
@@ -151,10 +154,13 @@
 	</div>
 	<div style="position:fixed; right:1300px; top:530px">
 		<button onclick="runSimulation(100,10,0,6)" id="Run">
-				Run Simulation
+				Run 
 		</button>
 		<button onclick="stopSimulation()" id="Stop">
-				Stop Simulation
+				Stop 
+		</button>
+		<button onclick="resetSimulation()" id="Reset">
+				Reset 
 		</button>
 		<input id="speed" type="range" min="0" max="1" step="0.1">
 		<p style="position:relative; left:240px;"><label id="speedLabel" for="speed"> 
@@ -165,6 +171,9 @@
 	</div>
 
 	<div id="ActionGraph" style="position:fixed; left:1000px">
+	
+	</div>
+	<div style="position:relative; left:120px">
 		<select id="firstGraphContent">
 			<option value="coop/def">Cooperations and Defections each round</option>
 			<option value="nCoop/nDef">Amount of cooperators and defectors on grid</option>
@@ -173,10 +182,11 @@
 			<option value="repRatio">Fraction of agents that reproduced</option>
 			<option value="moveRatio">Fraction of agents that moved</option>
 		</select>
-		<label id="firstGraphLabel" for="firstGraphContent" > Data to plot here.</label>
 	</div>
-
 	<div id="LifeGraph" style="position:fixed; left:1000px; top:350px">
+		
+	</div>
+	<div style="position:relative; left:120px; top:300px">
 		<select id="secondGraphContent">
 			<option value="coop/def">Cooperations and Defections each round</option>
 			<option value="nCoop/nDef">Amount of cooperators and defectors on grid</option>
@@ -185,8 +195,6 @@
 			<option value="repRatio">Fraction of agents that reproduced</option>
 			<option value="moveRatio">Fraction of agents that moved</option>
 		</select>
-		<label id="secondGraphLabel" for="secondGraphContent" > Data to plot here.</label>
 	</div>
-
 </body>
 </html>

@@ -18,7 +18,7 @@ of Joshua Epstein's cooperation model.
 	- %of coop/def that changed position √
 - Move/act/reproduce/die order customization √
 - Asynchronus updating option √
-- Reset function
+- Reset function √
 - Randomize agent death age
 - implement metabolism
 - implement mutation
