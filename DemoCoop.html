@@ -165,11 +165,27 @@
 	</div>
 
 	<div id="ActionGraph" style="position:fixed; left:1000px">
-		Actions per round graph.
+		<select id="firstGraphContent">
+			<option value="coop/def">Cooperations and Defections each round</option>
+			<option value="nCoop/nDef">Amount of cooperators and defectors on grid</option>
+			<option value="avgPayoff">Average payoff</option>
+			<option value="deathRatio">Fraction of agents that died</option>
+			<option value="repRatio">Fraction of agents that reproduced</option>
+			<option value="moveRatio">Fraction of agents that moved</option>
+		</select>
+		<label id="firstGraphLabel" for="firstGraphContent" > Data to plot here.</label>
 	</div>
 
 	<div id="LifeGraph" style="position:fixed; left:1000px; top:350px">
-		Life/Deaths per round graph.
+		<select id="secondGraphContent">
+			<option value="coop/def">Cooperations and Defections each round</option>
+			<option value="nCoop/nDef">Amount of cooperators and defectors on grid</option>
+			<option value="avgPayoff">Average payoffs</option>
+			<option value="deathRatio">Fraction of agents that died</option>
+			<option value="repRatio">Fraction of agents that reproduced</option>
+			<option value="moveRatio">Fraction of agents that moved</option>
+		</select>
+		<label id="secondGraphLabel" for="secondGraphContent" > Data to plot here.</label>
 	</div>
 
 </body>

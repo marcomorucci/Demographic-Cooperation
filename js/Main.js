@@ -2,8 +2,10 @@
 payoffType = "fixed"; 
 curRound = 0; 
 simData = "";
-actionsRecord = [];
-lifeRecord = [];
+firstData = [];
+secondData = [];
+firstLabels = [];
+secondLabels = [];
 running = false; 
 
 function init(){
@@ -177,8 +179,13 @@ function runSimulation(){
 
 	//Initialize simulation data table
 	simData = "Action,Agent,Budget,Against,Round,PayoffType,T,R,P,S\n";
-	actionsRecord = [];
-	lifeRecord = [];
+
+	//Reset data
+	firstData = [];
+	secondData = [];
+
+	var firstGraph = document.getElementById("firstGraphContent").value;
+	var secondGraph = document.getElementById("secondGraphContent").value;
 
 	//Create grid and populate it with agents
 	var g = new Grid(gridSide, canvas);
@@ -187,7 +194,7 @@ function runSimulation(){
 	g.draw(ctx); 
 	running = true; 
 	repeats = setInterval(function(){simulateRound(maxRounds,g,repThreshold,dieThreshold,
-		childLoss,payoffFcn,order,updateMode); 
+		childLoss,payoffFcn,order,updateMode, firstGraph, secondGraph); 
 	g.draw(ctx);},simSpeed);
 }
 
@@ -196,14 +203,16 @@ function stopSimulation(){
 	running = false; 
 }
 
-function simulateRound(maxRounds,grid, repThreshold, dieThreshold, childLoss,payoffFcn,updateOrder,updateMode){
+function simulateRound(maxRounds,grid, repThreshold, dieThreshold, childLoss,payoffFcn,
+	updateOrder,updateMode, firstGraph, secondGraph){
 	
 	if(curRound >= maxRounds)
 		clearInterval(repeats);
 
 	console.log("cur round: ",curRound, "tot agents:",grid.agents.length); 
 
-	var roundData = {coop:0, def:0, move:0, life:0, death:0};
+	var roundData = {round:curRound, coop:0, def:0, nCoop:0, nDef:0, avgCoop:0, avgDef:0, 
+		coopDeath:0, defDeath:0, coopRep:0, defRep:0, coopMove:0, defMove:0};
 
 	//Shuffle agent order
 	shuffleArray(grid.agents);
@@ -215,22 +224,96 @@ function simulateRound(maxRounds,grid, repThreshold, dieThreshold, childLoss,pay
 		updateOrder.third(grid,repThreshold,dieThreshold,childLoss,payoffFcn,roundData);
 		updateOrder.fourth(grid,repThreshold,dieThreshold,childLoss,payoffFcn,roundData);
 	}else{
-		//Asynchronous updating
+		//Asynchronous updating reverse order because die function removes agent from list; 
+		//reverse loop avoid skipping agents after removal. 
 		for(var i = grid.agents.length-1; i >= 0; i--){
 			updateOrder.first(grid,grid.agents[i],repThreshold,dieThreshold,childLoss,payoffFcn,roundData);
-			updateOrder.second(grid,grid.agents[i],repThreshold,dieThreshold,childLoss,payoffFcn,roundData);
-			updateOrder.third(grid,grid.agents[i],repThreshold,dieThreshold,childLoss,payoffFcn,roundData);
-			updateOrder.fourth(grid,grid.agents[i],repThreshold,dieThreshold,childLoss,payoffFcn,roundData);
+			if(grid.agents[i] !== undefined)
+				updateOrder.second(grid,grid.agents[i],repThreshold,dieThreshold,childLoss,payoffFcn,roundData);
+			if(grid.agents[i] !== undefined)
+				updateOrder.third(grid,grid.agents[i],repThreshold,dieThreshold,childLoss,payoffFcn,roundData);
+			if(grid.agents[i] !== undefined)
+				updateOrder.fourth(grid,grid.agents[i],repThreshold,dieThreshold,childLoss,payoffFcn,roundData);
 		}
 	}
-	 actionsRecord.push([curRound,roundData.coop,roundData.def]);
-	 lifeRecord.push([curRound,roundData.life,roundData.death]);
-	 a = new Dygraph(document.getElementById("ActionGraph"), 
-	 	actionsRecord,{labels: ["Round","Cooperations","Defections"]});
-	 l = new Dygraph(document.getElementById("LifeGraph"), 
-	 	lifeRecord,{labels: ["Round","Reproductions","Deaths"]});
+	roundData.nCoop = grid.cooperators; 
+	roundData.nDef = grid.defectors; 
+	updateRecords(roundData, firstGraph,secondGraph); 
+	//console.log(firstData,secondData);
+	updatePlots();
 
 	curRound++;
+}
+
+function updateRecords(roundData,firstGraph,secondGraph){
+	var totAgents = roundData.nCoop+roundData.nDef; 
+	switch (firstGraph){
+		case "coop/def":
+			firstLabels = ["Round","Cooperations","Defections","Interactions"];
+			firstData.push([roundData.round,roundData.coop,roundData.def,roundData.coop+roundData.def]);
+		break;
+		case "nCoop/nDef":
+			firstLabels = ["Round","Cooperators","Defectors","Agents"];
+			firstData.push([roundData.round,roundData.nCoop,roundData.nDef,roundData.nCoop+roundData.nDef]);
+		break;
+		case "avgPayoff":
+			firstLabels = ["Round","Avg. cooperator gain","Avg. defector gain","Avg. total gain"];
+			firstData.push([roundData.round,roundData.avgCoop/roundData.nCoop,
+				roundData.avgDef/roundData.nDef,(roundData.avgCoop+roundData.avgDef)/totAgents]);
+		break;
+		case "deathRatio":
+			firstLabels = ["Round","Coop. that died (%)","Def. that died (%)","Agents that died (%)"];
+			firstData.push([roundData.round,roundData.coopDeath/roundData.nCoop,roundData.defDeath/roundData.nDef,
+				(roundData.coopDeath+roundData.defDeath)/totAgents]);
+		break;
+		case "repRatio":
+			firstLabels = ["Round","Coop. that reproduced (%)","Def. that reproduced (%)","Agents that reproduced (%)"];
+			firstData.push([roundData.round,roundData.coopRep/roundData.nCoop,roundData.defRep/roundData.nDef,
+				(roundData.coopRep+roundData.defRep)/totAgents]);
+		break;
+		case "moveRatio":
+			firstLabels = ["Round","Coop. that moved (%)","Def. that moved (%)","Agents that moved (%)"];
+			firstData.push([roundData.round,roundData.coopMove/roundData.nCoop,roundData.defMove/roundData.nDef,
+				(roundData.coopMove+roundData.defMove)/totAgents]);
+		break;
+	}
+	switch(secondGraph){
+		case "coop/def":
+			secondLabels = ["Round","Cooperations","Defections","Interactions"];
+			secondData.push([roundData.round,roundData.coop,roundData.def,roundData.coop+roundData.def]);
+		break;
+		case "nCoop/nDef":
+			secondLabels = ["Round","Cooperators","Defectors","Agents"];
+			secondData.push([roundData.round,roundData.nCoop,roundData.nDef,roundData.nCoop+roundData.nDef]);
+		break;
+		case "avgPayoff":
+			secondLabels = ["Round","Avg. cooperator gain","Avg. defector gain","Avg. total gain"];
+			secondData.push([roundData.round,roundData.avgCoop/roundData.nCoop,
+				roundData.avgDef/roundData.nDef,(roundData.avgCoop+roundData.avgDef)/totAgents]);
+		break;
+		case "deathRatio":
+			secondLabels = ["Round","Coop. that died (%)","Def. that died (%)","Agents that died (%)"];
+			secondData.push([roundData.round,roundData.coopDeath/roundData.nCoop,roundData.defDeath/roundData.nDef,
+				(roundData.coopDeath+roundData.defDeath)/totAgents]);
+		break;
+		case "repRatio":
+			secondLabels = ["Round","Coop. that reproduced (%)","Def. that reproduced (%)","Agents that reproduced (%)"];
+			secondData.push([roundData.round,roundData.coopRep/roundData.nCoop,roundData.defRep/roundData.nDef,
+				(roundData.coopRep+roundData.defRep)/totAgents]);
+		break;
+		case "moveRatio":
+			secondLabels = ["Round","Coop. that moved (%)","Def. that moved (%)","Agents that moved (%)"];
+			secondData.push([roundData.round,roundData.coopMove/roundData.nCoop,roundData.defMove/roundData.nDef,
+				(roundData.coopMove+roundData.defMove)/totAgents]);
+		break;
+	}
+}
+
+function updatePlots(){
+	a = new Dygraph(document.getElementById("ActionGraph"), 
+	 	firstData,{labels: firstLabels});
+	l = new Dygraph(document.getElementById("LifeGraph"), 
+	 	secondData,{labels: secondLabels});
 }
 
 function createUpdateOrder(updateMode, actPos, movePos, diePos, repPos){
@@ -354,34 +437,51 @@ function asyncAct(grid,agent,repThreshold,dieThreshold,childLoss,payoffFcn,round
 		if(neighbours[i].containsAgent()){
 			var p = payoffFcn();
 
-			agent.updateBudget(neighbours[i].agent.getAction(),p);
-			neighbours[i].agent.updateBudget(agent.getAction(),p);
+			var p1 = agent.updateBudget(neighbours[i].agent.getAction(),p);
+			var p2 = neighbours[i].agent.updateBudget(agent.getAction(),p);
 
-			if(agent.getAction())
+			if(agent.getAction()){
 				roundData.coop++;
-			else
+				roundData.avgCoop += p1;
+			}
+			else{
 				roundData.def++;
-			if(neighbours[i].agent.getAction())
+				roundData.avgDef += p1;
+			}
+			if(neighbours[i].agent.getAction()){
 				roundData.coop++;
-			else
+				roundData.avgCoop += p2; 
+			}
+			else{
 				roundData.def++;
+				roundData.avgDef += p2; 
+			}
 		}
 	}
 }
 
 function asyncMove(grid,agent,repThreshold,dieThreshold,childLoss,payoffFcn,roundData){
 	if(agent.move(grid))
-		roundData.move++; 
+		if(agent.getAction())
+			roundData.coopMove++; 
+		else 
+			roundData.defMove++;
 }
 
 function asyncReproduce(grid,agent,repThreshold,dieThreshold,childLoss,payoffFcn,roundData){
 	if(agent.reproduce(grid,repThreshold,childLoss))
-		roundData.life++;
+		if(agent.getAction())
+			roundData.coopRep++;
+		else
+			roundData.defRep++;
 }
 
 function asyncDie(grid,agent,repThreshold,dieThreshold,childLoss,payoffFcn,roundData){
 	if(agent.die(grid,dieThreshold))
-		roundData.death++;
+		if(agent.getAction())
+			roundData.coopDeath++;
+		else
+			roundData.defDeath++;
 }
 
 function allAct(grid,repThreshold,dieThreshold,childLoss,payoffFcn,roundData){
@@ -457,9 +557,14 @@ function storeData(){
 	//String(curRound)+","+payoffType+","+ String(p.T)+","+String(p.R)+
 	//","+String(p.P)+","+String(p.S)+"\n"; 
 }
+
+
 /**
  * Randomize array element order in-place.
  * Using Fisher-Yates shuffle algorithm.
+ * Seriously though, that we can't find anything better 
+ * than the O(n) trivial solution for this is kind of a 
+ * bummer. 
  */
 function shuffleArray(array) {
     for (var i = array.length - 1; i > 0; i--) {

@@ -15,6 +15,7 @@ Agent.prototype.getAction = function(){
 //Payoffs are assumed to come in an object of the form
 //payoffs = {R:1,S:2,T:3,P:4};
 Agent.prototype.updateBudget = function(action, payoffs){
+	var prevBudget = this.budget; 
 	if(this.strategy === true && action === true)
 		this.budget += payoffs.R; 
 	else if (this.strategy === true && action === false)
@@ -25,6 +26,7 @@ Agent.prototype.updateBudget = function(action, payoffs){
 		this.budget += payoffs.P; 
 	else 
 		throw "Error: unspecified action, can't upadate payoffs"; 
+	return (this.budget-prevBudget);
 };
 
 
