@@ -20,7 +20,6 @@ function runSimulation(){
 	var ctx = canvas.getContext("2d");
 	ctx.font = "20px Arial";
 	ctx.fillStyle = "red";
-	ctx.clearRect(0,0,canvas.width,canvas.height);
 	//User input processing. 
 	var gridSide = parseInt(document.getElementById("gridSide").value,10); 
 	if(isNaN(gridSide) || gridSide < 5 ){
@@ -42,60 +41,52 @@ function runSimulation(){
 	
 	var budget = parseInt(document.getElementById("budget").value,10);
 	if(isNaN(budget) || budget <= 0){
-		ctx.fillText("Budget must be an integer greater than 0",80,250);
+		ctx.fillText("Budget must be an integer greater than 0");
 		return; 
 	} 
 	
 	var vision = parseInt(document.getElementById("vision").value,10);
-	if(isNaN(vision) || vision < 0){
-		ctx.fillText("Vision must be a positive integer",80,250);
+	if(isNaN(vision)){
+
 		return; 
 	} 
 	var repThreshold = parseInt(document.getElementById("repThreshold").value,10);
-	if(isNaN(repThreshold) || repThreshold < 0){
-		ctx.fillText("Reproduction must be a positive integer",80,250);
+	if(isNaN(repThreshold)){
 		return; 
 	} 
 	var dieThreshold = parseInt(document.getElementById("dieThreshold").value,10);
 	if(isNaN(dieThreshold)){
-		ctx.fillText("Death must be an integer",80,250);
 		return; 
 	}
 	 
 	var childLoss = parseInt(document.getElementById("childLoss").value,10);
-	if(isNaN(childLoss) || childLoss < 0){
-		ctx.fillText("Child must be a positive integer",80,250);
+	if(isNaN(childLoss)){
 		return; 
 	} 
 	
 	//Get max rounds
 	var maxRounds = parseInt(document.getElementById("maxRounds").value);
 	if(isNaN(maxRounds) || maxRounds <= 0){
-		ctx.fillText("MaxRounds must be an integer greater than 0",80,250);
 		return;
 	}
 
 	var maxLife = parseInt(document.getElementById("maxLife").value,10);
 	if(isNaN(maxLife) || maxLife < 1){
-		ctx.fillText("Max Age must be an integer greater than 1",80,250);
 		return;
 	}
 
 	var minLife = parseInt(document.getElementById("minLife").value,10);
 	if(isNaN(minLife) || minLife > maxLife || minLife < 0){
-		ctx.fillText("Max Age must be an integer greater than Max age",80,250);
 		return;
 	}
 
 	var metabolism = parseInt(document.getElementById("metabolism").value, 10);
 	if(isNaN(metabolism) || metabolism < 0){
-		ctx.fillText("Metabolism must be an integer greater than 0",80,250);
 		return; 
 	}
 
 	var mutation = parseFloat(document.getElementById("mutation").value,10);
 	if(isNaN(mutation) || mutation >= 1 || mutation < 0){
-		ctx.fillText("Mutation must be a real between 0 and 1",80,250);
 		return; 
 	}
 
@@ -111,7 +102,6 @@ function runSimulation(){
 
 		//Check input
 		if(isNaN(t) || isNaN(r) || isNaN(p) || isNaN(s)){
-			ctx.fillText("Payoffs must be integers",80,250);
 			return; 
 		} 
 	} else if(payoffType == "random"){
@@ -128,7 +118,6 @@ function runSimulation(){
 
 		if(isNaN(minT) || isNaN(maxT) || isNaN(minR) || isNaN(maxR) || 
 			isNaN(minS) || isNaN(maxS) || isNaN(minP) || isNaN(maxP)){
-			ctx.fillText("Payoffs must be integers",80,250);
 			return;
 		}
 	}else if(payoffType == "normal"){
@@ -145,7 +134,6 @@ function runSimulation(){
 
 		if(isNaN(muT) || isNaN(sdT) || isNaN(muR) || isNaN(sdR) || 
 			isNaN(muS) || isNaN(sdS) || isNaN(muP) || isNaN(sdP)){
-			ctx.fillText("Payoffs must be integers",80,250);
 			return;
 		} 
 	}
@@ -163,7 +151,6 @@ function runSimulation(){
 
 	if(actPos == movePos || actPos == repPos || actPos == diePos || movePos == repPos || 
 		movePos == repPos || movePos == diePos || repPos == diePos){
-		ctx.fillText("Moves must have different order positions",80,250);
 		return; 
 	} 
 
@@ -209,7 +196,7 @@ function simulateRound(maxRounds,grid, repThreshold, dieThreshold, childLoss,pay
 	if(curRound >= maxRounds)
 		clearInterval(repeats);
 
-	//console.log("cur round: ",curRound, "tot agents:",grid.agents.length); 
+	console.log("cur round: ",curRound, "tot agents:",grid.agents.length); 
 
 	var roundData = {round:curRound, coop:0, def:0, nCoop:0, nDef:0, avgCoop:0, avgDef:0, 
 		coopDeath:0, defDeath:0, coopRep:0, defRep:0, coopMove:0, defMove:0, coopAge:0, defAge:0,
@@ -237,7 +224,6 @@ function simulateRound(maxRounds,grid, repThreshold, dieThreshold, childLoss,pay
 				updateOrder.fourth(grid,grid.agents[i],repThreshold,dieThreshold,childLoss,payoffFcn,metabolism,mutation,roundData);
 		}
 	}
-	//console.log("coop:",grid.cooperators,"def",grid.defectors);
 	roundData.nCoop = grid.cooperators; 
 	roundData.nDef = grid.defectors; 
 	updateRecords(roundData, firstGraph,secondGraph); 

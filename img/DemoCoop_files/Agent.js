@@ -73,7 +73,7 @@ Agent.prototype.reproduce = function(grid,threshold,loss,mutation){
 	//Update agents count 
 	grid.agents.push(child);
 	//Update agents count
-	if(childStrategy)
+	if(this.strategy)
 		grid.cooperators++; 
 	else 
 		grid.defectors++; 

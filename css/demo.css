@@ -1,0 +1,87 @@
+body {
+  background: #333333;
+  color: #333333;
+  font-size: 11px;
+  height: auto;
+  padding-bottom: 20px;
+}
+
+a {
+  color: #fff;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+h1 {
+  font-family: Georgia, serif;
+  font-weight: normal;
+  padding-top: 20px;
+  text-align: left;
+}
+
+h2 {
+  padding-top: 20px;
+  text-align: center;
+}
+
+p {
+  border: 0px solid #666;
+  overflow: hidden;
+  padding: 1px 0;
+  text-align: left;
+}
+
+.container_12,
+.container_16,
+.container_24 {
+  background-color: #fff;
+  background-repeat: repeat-y;
+  margin-bottom: 20px;
+}
+
+.container_12 {
+  background-image: url(../img/white_bg.jpg);
+}
+
+.container_16 {
+  background-image: url(../img/16_col.gif);
+}
+
+.container_24 {
+  background-image: url(../img/24_col.gif);
+}
+
+.numeric_input{
+  width:40px;
+}
+
+.dropdown_input{
+  width:120px;
+}
+
+.inputs_box{
+  border: 1px solid #666;
+}
+
+.graph{
+  border: 1px solid #666;
+  border-radius: 1px;
+  background-color: #fff;
+  width: 440px;
+  height: 320px;
+}
+
+.input_label{
+  font-weight: bold;
+  font-size: 12px;
+  text-shadow: 1px 1px 3px #7f7f7f; /* horizontal vertical blur colour */
+}
+
+.sim_grid{
+   box-shadow: 10px 5px 30px #888888;
+   border-radius: 10px;
+   background-color: #333333;
+}

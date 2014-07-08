@@ -25,7 +25,7 @@ Square.prototype.setAgent = function(agent){
 	if(this.agent === null)
 		this.color = '#CFC0C0';
 	else if(this.agent.strategy === false) 
-		this.color = "#ff6666";
+		this.color = "#E75050";
 	else if(this.agent.strategy === true)
-	 	this.color = "#6666ff";
+	 	this.color = "#375AE2";
 };
