@@ -33,3 +33,4 @@ of Joshua Epstein's cooperation model.
 - reset 
 - error handling √
   - Find a way to handle decimal payoffs.
+-fix payoff display in chrome and safari

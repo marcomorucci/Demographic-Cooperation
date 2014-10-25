@@ -35,25 +35,26 @@ function randInt(min, max){
 }
 
 function changePayoffInput(){
+
 	var fixed = document.getElementById("fixedInput"); 
 	var random = document.getElementById("randomInput");
 	var normal = document.getElementById("normalInput");
 
 	var opt = document.getElementById("payoffType");
-	if(opt.value=="fixed"){
+	if(opt.value === "fixed"){
 		random.style="display:none";
 		normal.style="display:none"; 
-		fixed.style="display:block";
+		fixed.style='display:inherit';
 		payoffType = "fixed"; 
-	} else if (opt.value == "random"){
+	} else if (opt.value === "random"){
 		normal.style="display:none"; 
 		fixed.style="display:none";
-		random.style="display:block";
+		random.style='display:inherit';
 		payoffType = "random"; 
-	} else if (opt.value == "normal"){
+	} else if (opt.value === "normal"){
 		fixed.style="display:none";
 		random.style="display:none";
-		normal.style="display:block"; 	
+		normal.style='display:inherit'; 	
 		payoffType = "normal";
 	}
 }
